@@ -40,6 +40,8 @@ class MainActivity : AppCompatActivity() {
         setupField(map, "ca", R.id.et_ca, "ca")
         setupField(map, "el", R.id.et_el, "el")
         setupField(map, "de", R.id.et_de, "de")
+        setupField(map, "it", R.id.et_it, "it")
+        setupField(map, "ar", R.id.et_ar, "ar")
 
         editTexts = map
         setupListeners()

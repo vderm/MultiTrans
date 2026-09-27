@@ -42,11 +42,17 @@
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🇪🇸 CATALAN" android:textSize="12sp" android:textStyle="bold" android:textColor="#555555" android:layout_marginStart="4dp" android:layout_marginBottom="4dp"/>
             <EditText android:id="@+id/et_ca" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="18sp" android:layout_marginBottom="20dp" android:background="@drawable/edittext_bg" android:padding="12dp" android:textColor="#000000" android:minHeight="48dp" android:inputType="textLongMessage"/>
 
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🇮🇹 ITALIAN" android:textSize="12sp" android:textStyle="bold" android:textColor="#555555" android:layout_marginStart="4dp" android:layout_marginBottom="4dp"/>
+            <EditText android:id="@+id/et_it" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="18sp" android:layout_marginBottom="20dp" android:background="@drawable/edittext_bg" android:padding="12dp" android:textColor="#000000" android:minHeight="48dp" android:inputType="textLongMessage"/>
+
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🇬🇷 GREEK" android:textSize="12sp" android:textStyle="bold" android:textColor="#555555" android:layout_marginStart="4dp" android:layout_marginBottom="4dp"/>
             <EditText android:id="@+id/et_el" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="18sp" android:layout_marginBottom="20dp" android:background="@drawable/edittext_bg" android:padding="12dp" android:textColor="#000000" android:minHeight="48dp" android:inputType="textLongMessage"/>
 
             <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🇩🇪 GERMAN" android:textSize="12sp" android:textStyle="bold" android:textColor="#555555" android:layout_marginStart="4dp" android:layout_marginBottom="4dp"/>
             <EditText android:id="@+id/et_de" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="18sp" android:layout_marginBottom="20dp" android:background="@drawable/edittext_bg" android:padding="12dp" android:textColor="#000000" android:minHeight="48dp" android:inputType="textLongMessage"/>
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="🇸🇦 ARABIC" android:textSize="12sp" android:textStyle="bold" android:textColor="#555555" android:layout_marginStart="4dp" android:layout_marginBottom="4dp"/>
+            <EditText android:id="@+id/et_ar" android:layout_width="match_parent" android:layout_height="wrap_content" android:textSize="18sp" android:layout_marginBottom="20dp" android:background="@drawable/edittext_bg" android:padding="12dp" android:textColor="#000000" android:minHeight="48dp" android:inputType="textLongMessage"/>
 
         </LinearLayout>
     </ScrollView>
