@@ -4,6 +4,7 @@ import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.LocaleList
+import android.speech.tts.TextToSpeech
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
@@ -29,6 +30,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var llContainer: LinearLayout
     private lateinit var preferenceManager: LanguagePreferenceManager
     
+    private var tts: TextToSpeech? = null
     private var translationJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Main)
     private var activeDownloads = 0
@@ -47,6 +49,11 @@ class MainActivity : AppCompatActivity() {
         progressBar = findViewById(R.id.progress_bar)
         scrollView = findViewById(R.id.main_scroll)
         llContainer = findViewById(R.id.ll_container)
+
+        // Initialize Native Android Text To Speech
+        tts = TextToSpeech(this) { status ->
+            // Checked implementation confirmation
+        }
 
         findViewById<Button>(R.id.btn_clear).setOnClickListener { clearAll() }
         findViewById<ImageButton>(R.id.btn_settings).setOnClickListener {
@@ -68,12 +75,21 @@ class MainActivity : AppCompatActivity() {
             val fieldView = layoutInflater.inflate(R.layout.item_language_field, llContainer, false)
             val tvLabel = fieldView.findViewById<TextView>(R.id.tv_label)
             val etField = fieldView.findViewById<EditText>(R.id.et_field)
+            val btnSpeak = fieldView.findViewById<ImageButton>(R.id.btn_speak)
 
             tvLabel.text = "${langModel.flag} ${langModel.name.uppercase()}"
             etField.imeHintLocales = LocaleList(Locale(code))
 
             newMap[code] = etField
             llContainer.addView(fieldView)
+
+            btnSpeak.setOnClickListener {
+                val utterance = etField.text.toString()
+                if (utterance.isNotBlank()) {
+                    tts?.language = Locale(code)
+                    tts?.speak(utterance, TextToSpeech.QUEUE_FLUSH, null, "${code}_speak")
+                }
+            }
 
             etField.setOnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) {
@@ -167,5 +183,7 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         translationJob?.cancel()
         scope.cancel()
+        tts?.stop()
+        tts?.shutdown()
     }
 }
