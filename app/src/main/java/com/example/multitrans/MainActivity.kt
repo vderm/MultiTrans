@@ -1,5 +1,6 @@
 package com.example.multitrans
 
+import android.content.Intent
 import android.graphics.Rect
 import android.os.Bundle
 import android.os.LocaleList
@@ -8,8 +9,12 @@ import android.text.TextWatcher
 import android.view.View
 import android.widget.Button
 import android.widget.EditText
+import android.widget.ImageButton
+import android.widget.LinearLayout
 import android.widget.ProgressBar
 import android.widget.ScrollView
+import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import com.google.mlkit.common.model.DownloadConditions
 import com.google.mlkit.nl.translate.*
@@ -18,61 +23,77 @@ import java.util.Locale
 
 class MainActivity : AppCompatActivity() {
 
-    private lateinit var editTexts: Map<String, EditText>
+    private var editTexts: Map<String, EditText> = emptyMap()
     private lateinit var progressBar: ProgressBar
     private lateinit var scrollView: ScrollView
+    private lateinit var llContainer: LinearLayout
+    private lateinit var preferenceManager: LanguagePreferenceManager
+    
     private var translationJob: Job? = null
     private val scope = CoroutineScope(Dispatchers.Main)
     private var activeDownloads = 0
+
+    private val settingsLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) {
+            populateFields()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        preferenceManager = LanguagePreferenceManager(this)
         progressBar = findViewById(R.id.progress_bar)
         scrollView = findViewById(R.id.main_scroll)
+        llContainer = findViewById(R.id.ll_container)
+
         findViewById<Button>(R.id.btn_clear).setOnClickListener { clearAll() }
+        findViewById<ImageButton>(R.id.btn_settings).setOnClickListener {
+            val intent = Intent(this, LanguageSettingsActivity::class.java)
+            settingsLauncher.launch(intent)
+        }
 
-        val map = HashMap<String, EditText>()
-        setupField(map, "en", R.id.et_en, "en")
-        setupField(map, "fr", R.id.et_fr, "fr")
-        setupField(map, "es", R.id.et_es, "es")
-        setupField(map, "ca", R.id.et_ca, "ca")
-        setupField(map, "el", R.id.et_el, "el")
-        setupField(map, "de", R.id.et_de, "de")
-        setupField(map, "it", R.id.et_it, "it")
-        setupField(map, "ar", R.id.et_ar, "ar")
-
-        editTexts = map
-        setupListeners()
+        populateFields()
         setupKeyboardListener()
     }
 
-    private fun setupField(map: HashMap<String, EditText>, langCode: String, resId: Int, localeCode: String) {
-        findViewById<EditText>(resId)?.let { editText ->
-            map[langCode] = editText
-            editText.imeHintLocales = LocaleList(Locale(localeCode))
+    private fun populateFields() {
+        llContainer.removeAllViews()
+        val newMap = mutableMapOf<String, EditText>()
+        val preferredCodes = preferenceManager.getPreferredLanguages()
 
-            editText.setOnFocusChangeListener { _, hasFocus ->
+        for (code in preferredCodes) {
+            val langModel = LanguageData.allLanguages.find { it.code == code } ?: continue
+            val fieldView = layoutInflater.inflate(R.layout.item_language_field, llContainer, false)
+            val tvLabel = fieldView.findViewById<TextView>(R.id.tv_label)
+            val etField = fieldView.findViewById<EditText>(R.id.et_field)
+
+            tvLabel.text = "${langModel.flag} ${langModel.name.uppercase()}"
+            etField.imeHintLocales = LocaleList(Locale(code))
+
+            newMap[code] = etField
+            llContainer.addView(fieldView)
+
+            etField.setOnFocusChangeListener { _, hasFocus ->
                 if (hasFocus) {
-                    editText.postDelayed({
-                        scrollView.smoothScrollTo(0, editText.top - 100)
+                    etField.postDelayed({
+                        val rect = Rect()
+                        fieldView.getGlobalVisibleRect(rect)
+                        scrollView.smoothScrollTo(0, fieldView.top - 100)
                     }, 300)
                 }
             }
-        }
-    }
 
-    private fun setupListeners() {
-        for ((langCode, editText) in editTexts) {
-            editText.addTextChangedListener(object : TextWatcher {
+            etField.addTextChangedListener(object : TextWatcher {
                 override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
                 override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {
-                    if (editText.isFocused) debounceTranslation(langCode, s.toString())
+                    if (etField.isFocused) debounceTranslation(code, s.toString())
                 }
                 override fun afterTextChanged(s: Editable?) {}
             })
         }
+        editTexts = newMap
     }
 
     private fun debounceTranslation(sourceLang: String, text: String) {
@@ -84,7 +105,9 @@ class MainActivity : AppCompatActivity() {
                 return@launch
             }
             for ((targetLang, targetEditText) in editTexts) {
-                if (targetLang != sourceLang) translateText(text, sourceLang, targetLang, targetEditText)
+                if (targetLang != sourceLang) {
+                    translateText(text, sourceLang, targetLang, targetEditText)
+                }
             }
         }
     }
@@ -102,7 +125,11 @@ class MainActivity : AppCompatActivity() {
             .addOnSuccessListener {
                 updateLoading(false)
                 translator.translate(text)
-                    .addOnSuccessListener { result -> targetView.setText(result) }
+                    .addOnSuccessListener { result -> 
+                        if (!targetView.isFocused) {
+                            targetView.setText(result)
+                        }
+                    }
                     .addOnCompleteListener { translator.close() }
             }
             .addOnFailureListener {
