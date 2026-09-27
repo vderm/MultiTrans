@@ -6,6 +6,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.mlkit.common.model.RemoteModelManager
+import com.google.mlkit.nl.translate.TranslateRemoteModel
 
 class LanguageSettingsActivity : AppCompatActivity() {
 
@@ -58,7 +60,19 @@ class LanguageSettingsActivity : AppCompatActivity() {
         itemTouchHelper.attachToRecyclerView(recyclerView)
 
         findViewById<Button>(R.id.btn_save).setOnClickListener {
-            preferenceManager.savePreferredLanguages(adapter.getSelectedLanguageCodes())
+            val oldPreferred = preferenceManager.getPreferredLanguages()
+            val newPreferred = adapter.getSelectedLanguageCodes()
+
+            // Identify unselected languages to delete their translation model kits
+            val unselectedCodes = oldPreferred.filter { !newPreferred.contains(it) }
+            val modelManager = RemoteModelManager.getInstance()
+            
+            for (code in unselectedCodes) {
+                val model = TranslateRemoteModel.Builder(code).build()
+                modelManager.deleteDownloadedModel(model)
+            }
+
+            preferenceManager.savePreferredLanguages(newPreferred)
             setResult(RESULT_OK)
             finish()
         }
